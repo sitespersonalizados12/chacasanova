@@ -101,94 +101,85 @@
     </div>
 
     <script>
-        const gifts = [
-            { id: 1, name: "Jogo de Prato", icon: "🍽️" },
-            { id: 2, name: "Jogo de xícara", icon: "☕" },
-            { id: 3, name: "Jogo de Sobremesa", icon: "🍰" },
-            { id: 4, name: "Kit Marinex", icon: "🥘" },
-            { id: 5, name: "Jogo Assadura de Bolo", icon: "🎂" },
-            { id: 6, name: "Batedeira", icon: "🥄" },
-            { id: 7, name: "Sanduicheira", icon: "🥪" },
-            { id: 8, name: "Liquidificador + Multiprocessador", icon: "🔪" },
-            { id: 9, name: "Panela de Pressão", icon: "🍲" },
-            { id: 10, name: "Jogo de Frigideira", icon: "🍳" },
-            { id: 11, name: "Jogo de Lençol (QUEEN)", icon: "🛏️" },
-            { id: 12, name: "Colcha de cama (QUEEN)", icon: "🛌" },
-            { id: 13, name: "Edredom", icon: "🌙" },
-            { id: 14, name: "Manta Casal", icon: "🧶" },
-            { id: 15, name: "Jogo Tolha de Banho", icon: "🛁" },
-            { id: 16, name: "Ferro de Passar", icon: "👔" },
-            { id: 17, name: "Travesseiros", icon: "💤" },
-            { id: 18, name: "Jogo de tapetes para Cozinha", icon: "🏠" },
-            { id: 19, name: "Tapete para Sala", icon: "🪟" }
-        ];
+const { db, doc, setDoc, onSnapshot } = window.firebaseDB;
 
-        let selectedGifts = [];
+const gifts = [
+  { id: 1, name: "Jogo de Prato", icon: "🍽️" },
+  { id: 2, name: "Jogo de xícara", icon: "☕" },
+  { id: 3, name: "Jogo de Sobremesa", icon: "🍰" },
+  { id: 4, name: "Kit Marinex", icon: "🥘" },
+  { id: 5, name: "Jogo Assadura de Bolo", icon: "🎂" },
+  { id: 6, name: "Batedeira", icon: "🥄" },
+  { id: 7, name: "Sanduicheira", icon: "🥪" },
+  { id: 8, name: "Liquidificador + Multiprocessador", icon: "🔪" },
+  { id: 9, name: "Panela de Pressão", icon: "🍲" },
+  { id: 10, name: "Jogo de Frigideira", icon: "🍳" },
+  { id: 11, name: "Jogo de Lençol (QUEEN)", icon: "🛏️" },
+  { id: 12, name: "Colcha de cama (QUEEN)", icon: "🛌" },
+  { id: 13, name: "Edredom", icon: "🌙" },
+  { id: 14, name: "Manta Casal", icon: "🧶" },
+  { id: 15, name: "Jogo Tolha de Banho", icon: "🛁" },
+  { id: 16, name: "Ferro de Passar", icon: "👔" },
+  { id: 17, name: "Travesseiros", icon: "💤" },
+  { id: 18, name: "Jogo de tapetes para Cozinha", icon: "🏠" },
+  { id: 19, name: "Tapete para Sala", icon: "🪟" }
+];
 
-        async function loadSelectedGifts() {
-            try {
-                const result = await window.storage.get('selected-gifts', true);
-                if (result && result.value) {
-                    selectedGifts = JSON.parse(result.value);
-                }
-            } catch (error) {
-                console.log('Nenhum presente selecionado ainda');
-                selectedGifts = [];
-            }
-            renderGifts();
-        }
+let selectedGifts = [];
 
-        async function saveSelectedGifts() {
-            try {
-                await window.storage.set('selected-gifts', JSON.stringify(selectedGifts), true);
-            } catch (error) {
-                console.error('Erro ao salvar:', error);
-            }
-        }
+function renderGifts() {
+  const grid = document.getElementById("giftsGrid");
+  const emptyMessage = document.getElementById("emptyMessage");
 
-        function renderGifts() {
-            const grid = document.getElementById('giftsGrid');
-            const emptyMessage = document.getElementById('emptyMessage');
-            
-            grid.innerHTML = '';
-            
-            const availableGifts = gifts.filter(gift => !selectedGifts.includes(gift.id));
-            
-            if (availableGifts.length === 0) {
-                emptyMessage.style.display = 'block';
-                return;
-            }
-            
-            emptyMessage.style.display = 'none';
-            
-            availableGifts.forEach(gift => {
-                const div = document.createElement('div');
-                div.className = 'gift-item';
-                div.innerHTML = `
-                    <div class="icon">${gift.icon}</div>
-                    <div>${gift.name}</div>
-                `;
-                
-                div.addEventListener('click', () => selectGift(gift.id, div));
-                grid.appendChild(div);
-            });
-        }
+  grid.innerHTML = "";
 
-        async function selectGift(giftId, element) {
-            const confirmed = confirm('Você deseja escolher este presente?');
-            
-            if (confirmed) {
-                element.classList.add('selected');
-                
-                setTimeout(async () => {
-                    selectedGifts.push(giftId);
-                    await saveSelectedGifts();
-                    renderGifts();
-                }, 500);
-            }
-        }
+  const available = gifts.filter(g => !selectedGifts.includes(g.id));
 
-        loadSelectedGifts();
-    </script>
+  if (available.length === 0) {
+    emptyMessage.style.display = "block";
+    return;
+  }
+
+  emptyMessage.style.display = "none";
+
+  available.forEach(gift => {
+    const div = document.createElement("div");
+    div.className = "gift-item";
+    div.innerHTML = `
+      <div class="icon">${gift.icon}</div>
+      <div>${gift.name}</div>
+    `;
+    div.onclick = () => selectGift(gift.id);
+    grid.appendChild(div);
+  });
+}
+
+function selectGift(id) {
+  if (selectedGifts.includes(id)) return;
+
+  if (!confirm("Você deseja escolher este presente?")) return;
+
+  selectedGifts.push(id);
+  setDoc(doc(db, "config", "selectedGifts"), {
+    items: selectedGifts
+  });
+}
+
+function listenChanges() {
+  const ref = doc(db, "config", "selectedGifts");
+
+  onSnapshot(ref, snap => {
+    if (snap.exists()) {
+      selectedGifts = snap.data().items || [];
+    } else {
+      selectedGifts = [];
+    }
+    renderGifts();
+  });
+}
+
+listenChanges();
+</script>
+
 </body>
 </html>
