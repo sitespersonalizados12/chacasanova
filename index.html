@@ -100,6 +100,31 @@
         <p class="empty-message" id="emptyMessage">🎉 Todos os presentes já foram escolhidos! Obrigado a todos!</p>
     </div>
 
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA3MMIeYzJ2dg1gZH_7onode_IX96r7ZMU",
+    authDomain: "cha-de-casa-nova-1e53f.firebaseapp.com",
+    projectId: "cha-de-casa-nova-1e53f",
+    storageBucket: "cha-de-casa-nova-1e53f.firebasestorage.app",
+    messagingSenderId: "752447856594",
+    appId: "1:752447856594:web:d35d787353a75bef51b20b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 🔑 isso é o mais importante
+  window.firebaseDB = { db, doc, setDoc, onSnapshot };
+  </script>
+
     <script>
 const { db, doc, setDoc, onSnapshot } = window.firebaseDB;
 
