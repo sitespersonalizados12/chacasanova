@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Presentes - Chá de Casa Nova</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .gifts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .gift-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .gift-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .gift-item.selected {
+            animation: fadeOut 0.5s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-top: 50px;
+            display: none;
+        }
+
+        .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏡 Chá de Casa Nova</h1>
+        <p class="subtitle">Clique no presente que deseja dar para marcá-lo como escolhido</p>
+        
+        <div class="gifts-grid" id="giftsGrid"></div>
+        <p class="empty-message" id="emptyMessage">🎉 Todos os presentes já foram escolhidos! Obrigado a todos!</p>
+    </div>
+
+    <script>
+        const gifts = [
+            { id: 1, name: "Jogo de Prato", icon: "🍽️" },
+            { id: 2, name: "Jogo de xícara", icon: "☕" },
+            { id: 3, name: "Jogo de Sobremesa", icon: "🍰" },
+            { id: 4, name: "Kit Marinex", icon: "🥘" },
+            { id: 5, name: "Jogo Assadura de Bolo", icon: "🎂" },
+            { id: 6, name: "Batedeira", icon: "🥄" },
+            { id: 7, name: "Sanduicheira", icon: "🥪" },
+            { id: 8, name: "Liquidificador + Multiprocessador", icon: "🔪" },
+            { id: 9, name: "Panela de Pressão", icon: "🍲" },
+            { id: 10, name: "Jogo de Frigideira", icon: "🍳" },
+            { id: 11, name: "Jogo de Lençol (QUEEN)", icon: "🛏️" },
+            { id: 12, name: "Colcha de cama (QUEEN)", icon: "🛌" },
+            { id: 13, name: "Edredom", icon: "🌙" },
+            { id: 14, name: "Manta Casal", icon: "🧶" },
+            { id: 15, name: "Jogo Tolha de Banho", icon: "🛁" },
+            { id: 16, name: "Ferro de Passar", icon: "👔" },
+            { id: 17, name: "Travesseiros", icon: "💤" },
+            { id: 18, name: "Jogo de tapetes para Cozinha", icon: "🏠" },
+            { id: 19, name: "Tapete para Sala", icon: "🪟" }
+        ];
+
+        let selectedGifts = [];
+
+        async function loadSelectedGifts() {
+            try {
+                const result = await window.storage.get('selected-gifts', true);
+                if (result && result.value) {
+                    selectedGifts = JSON.parse(result.value);
+                }
+            } catch (error) {
+                console.log('Nenhum presente selecionado ainda');
+                selectedGifts = [];
+            }
+            renderGifts();
+        }
+
+        async function saveSelectedGifts() {
+            try {
+                await window.storage.set('selected-gifts', JSON.stringify(selectedGifts), true);
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+            }
+        }
+
+        function renderGifts() {
+            const grid = document.getElementById('giftsGrid');
+            const emptyMessage = document.getElementById('emptyMessage');
+            
+            grid.innerHTML = '';
+            
+            const availableGifts = gifts.filter(gift => !selectedGifts.includes(gift.id));
+            
+            if (availableGifts.length === 0) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+            
+            emptyMessage.style.display = 'none';
+            
+            availableGifts.forEach(gift => {
+                const div = document.createElement('div');
+                div.className = 'gift-item';
+                div.innerHTML = `
+                    <div class="icon">${gift.icon}</div>
+                    <div>${gift.name}</div>
+                `;
+                
+                div.addEventListener('click', () => selectGift(gift.id, div));
+                grid.appendChild(div);
+            });
+        }
+
+        async function selectGift(giftId, element) {
+            const confirmed = confirm('Você deseja escolher este presente?');
+            
+            if (confirmed) {
+                element.classList.add('selected');
+                
+                setTimeout(async () => {
+                    selectedGifts.push(giftId);
+                    await saveSelectedGifts();
+                    renderGifts();
+                }, 500);
+            }
+        }
+
+        loadSelectedGifts();
+    </script>
+</body>
+</html>
